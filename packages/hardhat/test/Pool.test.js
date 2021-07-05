@@ -79,6 +79,10 @@ describe("DeChitFund v1", function () {
       await poolContract.connect(accounts[10]).join();
 
       expect(await poolContract.state()).to.equal(poolStates.STARTED);
+      expect(await poolContract.currentTerm()).to.equal(1);
+      expect((await poolContract.currentTermEndTimestamp()).toNumber()).to.equal(
+        (await ethers.provider.getBlock()).timestamp + deployArgs.termPeriod
+      );
     });
 
     it("Should disallow new members to join when Pool State is not OPEN", async function () {

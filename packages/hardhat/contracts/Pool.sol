@@ -23,6 +23,7 @@ contract Pool {
   State public state;
   address[] public members;
   mapping(address => bool) public isMember;
+  uint256 public currentTermEndTimestamp;
 
   constructor(
     uint256 _noOfMembersNoOfTerms,
@@ -48,6 +49,10 @@ contract Pool {
     require(!isMember[msg.sender], "Caller is already a member");
     members.push(msg.sender);
     isMember[msg.sender] = true;
-    if (members.length == noOfMembersNoOfTerms) state = State.STARTED;
+    if (members.length == noOfMembersNoOfTerms) {
+      state = State.STARTED;
+      currentTerm = 1;
+      currentTermEndTimestamp = block.timestamp + termPeriod;
+    }
   }
 }
