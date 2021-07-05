@@ -164,5 +164,23 @@ describe("DeChitFund v1", function () {
         instalmentAmount
       );
     });
+
+    it("Should allow members to bid on Pool for current term", async function () {
+      const bidAmount = instalmentAmount * (deployArgs.maxBidPercent / 100);
+      await poolContract.connect(wallet1).bid(ethers.utils.parseEther(bidAmount.toString()));
+
+      const [bids, lowestBidAmount, lowestBidder] = await poolContract.getBidsForInstalment(
+        await poolContract.currentTerm()
+      );
+
+      expect(parseInt(ethers.utils.formatUnits(bids[0].bidAmount, daiDecimals), 10)).to.be.equal(
+        bidAmount
+      );
+      expect(bids[0].bidder).to.be.equal(wallet1.address);
+      expect(parseInt(ethers.utils.formatUnits(lowestBidAmount, daiDecimals), 10)).to.be.equal(
+        bidAmount
+      );
+      expect(lowestBidder).to.be.equal(wallet1.address);
+    });
   });
 });

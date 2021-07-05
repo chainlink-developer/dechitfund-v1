@@ -1,5 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.9.0;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -15,8 +16,16 @@ contract Pool {
     COMPLETE
   }
 
+  struct Bid {
+    uint256 bidAmount;
+    address bidder;
+  }
+
   struct Instalment {
     mapping(address => bool) memberPaid;
+    Bid[] bids;
+    uint256 lowestBidAmount;
+    address lowestBidder;
   }
 
   uint256 public noOfMembersNoOfTerms;
@@ -69,6 +78,49 @@ contract Pool {
     );
     IERC20(token).transferFrom(msg.sender, address(this), instalmentAmount);
     instalments[currentTerm].memberPaid[msg.sender] = true;
+  }
+
+  function bid(uint256 _bidAmount)
+    public
+    onlyMember
+    requireStateStarted
+    currentTermNotEnded
+  {
+    require(_bidAmount > 0, "Bid amount must be greater than zero");
+    require(
+      instalments[currentTerm].memberPaid[msg.sender],
+      "Caller has not paid current term"
+    );
+    if (instalments[currentTerm].lowestBidAmount != 0) {
+      require(
+        _bidAmount < instalments[currentTerm].lowestBidAmount,
+        "Bid amount must be less than current lowest bid"
+      );
+    }
+    require(
+      _bidAmount <= ((instalmentAmount * maxBidPercent) / 100),
+      "Bid amount cannot be greater than max bid percent"
+    );
+    Bid memory newBid = Bid(_bidAmount, msg.sender);
+    instalments[currentTerm].bids.push(newBid);
+    instalments[currentTerm].lowestBidAmount = _bidAmount;
+    instalments[currentTerm].lowestBidder = msg.sender;
+  }
+
+  function getBidsForInstalment(uint256 _term)
+    public
+    view
+    returns (
+      Bid[] memory,
+      uint256,
+      address
+    )
+  {
+    return (
+      instalments[_term].bids,
+      instalments[_term].lowestBidAmount,
+      instalments[_term].lowestBidder
+    );
   }
 
   function getMemberPaidForInstalment(uint256 _term, address _memberAddress)
