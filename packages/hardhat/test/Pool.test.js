@@ -6,7 +6,7 @@ use(solidity);
 
 describe("DeChitFund v1", function () {
   let accounts;
-  let deployer;
+  // let deployer;
   let wallet1;
 
   let poolContract;
@@ -30,7 +30,7 @@ describe("DeChitFund v1", function () {
 
   before(async () => {
     accounts = await ethers.getSigners();
-    deployer = accounts[0];
+    // deployer = accounts[0];
     wallet1 = accounts[1];
   });
 
