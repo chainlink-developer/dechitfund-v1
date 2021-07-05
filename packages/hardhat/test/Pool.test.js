@@ -124,11 +124,11 @@ describe("DeChitFund v1", function () {
       );
     });
 
-    it.skip("Should disallow new members to join when Pool already has required no. of members", async function () {
+    /* it.skip("Should disallow new members to join when Pool already has required no. of members", async function () {
       await expect(poolContract.connect(accounts[11]).join()).to.be.revertedWith(
         "Pool already has required no. of members"
       );
-    });
+    }); */
 
     it("Should allow members to deposit to Pool for current term", async function () {
       const wallet1DaiBalanceBefore = parseInt(
