@@ -8,12 +8,19 @@ import "hardhat/console.sol";
 contract Pool {
   using SafeMath for uint256;
 
+  enum State {
+    OPEN,
+    STARTED,
+    COMPLETE
+  }
+
   uint256 public noOfMembersNoOfTerms;
   address public token;
   uint256 public termPeriod;
   uint256 public instalmentAmount;
   uint256 public maxBidPercent;
   uint256 public currentTerm;
+  State public state;
 
   constructor(
     uint256 _noOfMembersNoOfTerms,
@@ -27,5 +34,6 @@ contract Pool {
     termPeriod = _termPeriod;
     instalmentAmount = _instalmentAmount;
     maxBidPercent = _maxBidPercent;
+    state = State.OPEN;
   }
 }

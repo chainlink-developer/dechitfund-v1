@@ -10,6 +10,12 @@ describe("DeChitFund v1", function () {
   const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
   const monthInSeconds = 30 * 24 * 60 * 60;
 
+  const poolStates = {
+    OPEN: 0,
+    STARTED: 1,
+    COMPLETE: 2,
+  };
+
   describe("Pool", function () {
     it("Should deploy and initialize Pool", async function () {
       const Pool = await ethers.getContractFactory("Pool");
@@ -35,6 +41,7 @@ describe("DeChitFund v1", function () {
       expect(await poolContract.termPeriod()).to.equal(args.termPeriod);
       expect(await poolContract.instalmentAmount()).to.equal(args.instalmentAmount);
       expect(await poolContract.maxBidPercent()).to.equal(args.maxBidPercent);
+      expect(await poolContract.state()).to.equal(poolStates.OPEN);
     });
   });
 });
