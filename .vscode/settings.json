@@ -1,0 +1,3 @@
+{
+  "prettier.prettierPath": "./packages/hardhat/node_modules/prettier"
+}
