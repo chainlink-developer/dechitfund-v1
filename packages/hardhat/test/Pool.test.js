@@ -11,8 +11,13 @@ describe("DeChitFund v1", function () {
   let wallet1;
 
   let poolContract;
+  let daiContract;
+  let daiDecimals;
 
   const monthInSeconds = 30 * 24 * 60 * 60;
+
+  const binance = "0x28c6c06298d514db089934071355e5743bf21d60";
+  const snatchAmount = 5000;
 
   const poolStates = {
     OPEN: 0,
@@ -32,6 +37,33 @@ describe("DeChitFund v1", function () {
     accounts = await ethers.getSigners();
     // deployer = accounts[0];
     wallet1 = accounts[1];
+  });
+
+  before("snatch DAI to member accounts", async function () {
+    const snatchTxns = [];
+
+    const accountToImpersonate = binance;
+    await ethers.provider.send("hardhat_impersonateAccount", [accountToImpersonate]);
+    const impersonatedSigner = await ethers.provider.getSigner(accountToImpersonate);
+    daiContract = new ethers.Contract(contracts.DAI_ADDRESS, contracts.DAI_ABI, impersonatedSigner);
+    daiDecimals = await daiContract.decimals();
+    for (let account = 1; account <= deployArgs.noOfMembersNoOfTerms; account += 1) {
+      const signer = accounts[account];
+      snatchTxns.push(
+        daiContract.transfer(signer.address, ethers.utils.parseEther(snatchAmount.toString()))
+      );
+    }
+    await Promise.all(snatchTxns);
+
+    const wallet1DaiBalance = parseInt(
+      ethers.utils.formatUnits(await daiContract.balanceOf(wallet1.address), daiDecimals),
+      10
+    );
+
+    expect(wallet1DaiBalance).to.be.at.least(
+      snatchAmount,
+      "wallet1 doesn't have at least 5000 DAI"
+    );
   });
 
   describe("Pool", function () {
