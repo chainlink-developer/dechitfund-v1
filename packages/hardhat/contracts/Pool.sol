@@ -21,6 +21,8 @@ contract Pool {
   uint256 public maxBidPercent;
   uint256 public currentTerm;
   State public state;
+  address[] public members;
+  mapping(address => bool) public isMember;
 
   constructor(
     uint256 _noOfMembersNoOfTerms,
@@ -35,5 +37,17 @@ contract Pool {
     instalmentAmount = _instalmentAmount;
     maxBidPercent = _maxBidPercent;
     state = State.OPEN;
+  }
+
+  function join() public {
+    require(state == State.OPEN, "Pool State is not OPEN");
+    require(
+      members.length != noOfMembersNoOfTerms,
+      "Pool already has required no. of members"
+    );
+    require(!isMember[msg.sender], "Caller is already a member");
+    members.push(msg.sender);
+    isMember[msg.sender] = true;
+    if (members.length == noOfMembersNoOfTerms) state = State.STARTED;
   }
 }
