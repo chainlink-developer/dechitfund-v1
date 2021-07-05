@@ -20,6 +20,14 @@ describe("DeChitFund v1", function () {
     COMPLETE: 2,
   };
 
+  const deployArgs = {
+    noOfMembersNoOfTerms: 10,
+    token: DAI,
+    termPeriod: monthInSeconds,
+    instalmentAmount: ethers.utils.parseEther("200"),
+    maxBidPercent: 90,
+  };
+
   before(async () => {
     accounts = await ethers.getSigners();
     deployer = accounts[0];
@@ -30,27 +38,19 @@ describe("DeChitFund v1", function () {
     it("Should deploy and initialize Pool", async function () {
       const Pool = await ethers.getContractFactory("Pool");
 
-      const args = {
-        noOfMembersNoOfTerms: 10,
-        token: DAI,
-        termPeriod: monthInSeconds,
-        instalmentAmount: ethers.utils.parseEther("200"),
-        maxBidPercent: 90,
-      };
-
       poolContract = await Pool.deploy(
-        args.noOfMembersNoOfTerms,
-        args.token,
-        args.termPeriod,
-        args.instalmentAmount,
-        args.maxBidPercent
+        deployArgs.noOfMembersNoOfTerms,
+        deployArgs.token,
+        deployArgs.termPeriod,
+        deployArgs.instalmentAmount,
+        deployArgs.maxBidPercent
       );
 
-      expect(await poolContract.noOfMembersNoOfTerms()).to.equal(args.noOfMembersNoOfTerms);
-      expect(await poolContract.token()).to.equal(args.token);
-      expect(await poolContract.termPeriod()).to.equal(args.termPeriod);
-      expect(await poolContract.instalmentAmount()).to.equal(args.instalmentAmount);
-      expect(await poolContract.maxBidPercent()).to.equal(args.maxBidPercent);
+      expect(await poolContract.noOfMembersNoOfTerms()).to.equal(deployArgs.noOfMembersNoOfTerms);
+      expect(await poolContract.token()).to.equal(deployArgs.token);
+      expect(await poolContract.termPeriod()).to.equal(deployArgs.termPeriod);
+      expect(await poolContract.instalmentAmount()).to.equal(deployArgs.instalmentAmount);
+      expect(await poolContract.maxBidPercent()).to.equal(deployArgs.maxBidPercent);
       expect(await poolContract.state()).to.equal(poolStates.OPEN);
     });
 
