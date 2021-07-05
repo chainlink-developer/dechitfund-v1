@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const { ethers, network } = require("hardhat");
 const { use, expect } = require("chai");
 const { solidity } = require("ethereum-waffle");
 const contracts = require("./utils/contracts");
@@ -181,6 +181,116 @@ describe("DeChitFund v1", function () {
         bidAmount
       );
       expect(lowestBidder).to.be.equal(wallet1.address);
+    });
+
+    it("Should allow members to end current term", async function () {
+      const approveTxns = [];
+      const balanceOfBeforeTxns = [];
+      const balanceOfAfterTxns = [];
+
+      const currentTerm = (await poolContract.currentTerm()).toNumber();
+      const currentTermEndTimestamp = (await poolContract.currentTermEndTimestamp()).toNumber();
+      const termPeriod = (await poolContract.termPeriod()).toNumber();
+
+      for (let account = 2; account <= 10; account += 1) {
+        approveTxns.push(
+          daiContract
+            .connect(accounts[account])
+            .approve(poolContract.address, deployArgs.instalmentAmount)
+        );
+      }
+      await Promise.all(approveTxns);
+
+      const lowestBidAmount = 145;
+
+      await poolContract.connect(accounts[2]).deposit();
+      await poolContract.connect(accounts[3]).deposit();
+      await poolContract.connect(accounts[4]).deposit();
+      await poolContract.connect(accounts[3]).bid(ethers.utils.parseEther("160"));
+      await poolContract.connect(accounts[5]).deposit();
+      await poolContract.connect(accounts[6]).deposit();
+      await poolContract.connect(accounts[7]).deposit();
+      await poolContract.connect(accounts[8]).deposit();
+      await poolContract.connect(accounts[6]).bid(ethers.utils.parseEther("150"));
+      await poolContract
+        .connect(accounts[8])
+        .bid(ethers.utils.parseEther(lowestBidAmount.toString()));
+      await poolContract.connect(accounts[9]).deposit();
+      await poolContract.connect(accounts[10]).deposit();
+
+      for (let account = 1; account <= 10; account += 1) {
+        balanceOfBeforeTxns.push(daiContract.balanceOf(accounts[account].address));
+      }
+      const balancesBefore = (await Promise.all(balanceOfBeforeTxns)).map((balance) =>
+        parseInt(ethers.utils.formatUnits(balance, daiDecimals), 10)
+      );
+
+      await network.provider.send("evm_setNextBlockTimestamp", [
+        (await poolContract.currentTermEndTimestamp()).toNumber(),
+      ]);
+      await network.provider.send("evm_mine");
+
+      await poolContract.connect(wallet1).endCurrentTerm();
+
+      for (let account = 1; account <= 10; account += 1) {
+        balanceOfAfterTxns.push(daiContract.balanceOf(accounts[account].address));
+      }
+      const balancesAfter = (await Promise.all(balanceOfAfterTxns)).map((balance) =>
+        parseInt(ethers.utils.formatUnits(balance, daiDecimals), 10)
+      );
+
+      const singleShare = parseInt(
+        (instalmentAmount * deployArgs.noOfMembersNoOfTerms - lowestBidAmount) /
+          (deployArgs.noOfMembersNoOfTerms - 1),
+        10
+      );
+
+      for (let index = 0; index < balancesBefore.length; index += 1) {
+        if (index !== 7)
+          expect(balancesAfter[index] - balancesBefore[index]).to.be.equal(singleShare);
+        else expect(balancesAfter[index] - balancesBefore[index]).to.be.equal(lowestBidAmount);
+      }
+
+      expect(await poolContract.currentTerm()).to.be.equal(currentTerm + 1);
+      expect(await poolContract.currentTermEndTimestamp()).to.be.equal(
+        currentTermEndTimestamp + termPeriod
+      );
+    });
+
+    it("Should set Pool as COMPLETE after last term", async function () {
+      const approveTxns = [];
+      const depositTxns = [];
+
+      for (let account = 1; account <= 10; account += 1) {
+        approveTxns.push(
+          daiContract
+            .connect(accounts[account])
+            .approve(poolContract.address, ethers.constants.MaxUint256)
+        );
+      }
+      await Promise.all(approveTxns);
+
+      for (let term = 2; term <= deployArgs.noOfMembersNoOfTerms; term += 1) {
+        for (let account = 1; account <= 10; account += 1) {
+          depositTxns.push(poolContract.connect(accounts[account]).deposit());
+        }
+        /* eslint-disable no-await-in-loop */
+        await Promise.all(depositTxns);
+        await poolContract.connect(accounts[3]).bid(ethers.utils.parseEther("160"));
+        await poolContract.connect(accounts[6]).bid(ethers.utils.parseEther("150"));
+        await poolContract.connect(accounts[9]).bid(ethers.utils.parseEther("140"));
+
+        await network.provider.send("evm_setNextBlockTimestamp", [
+          (await poolContract.currentTermEndTimestamp()).toNumber(),
+        ]);
+        await network.provider.send("evm_mine");
+
+        await poolContract.connect(wallet1).endCurrentTerm();
+      }
+
+      expect(await poolContract.currentTerm()).to.be.equal(0);
+      expect(await poolContract.currentTermEndTimestamp()).to.be.equal(0);
+      expect(await poolContract.state()).to.equal(poolStates.COMPLETE);
     });
   });
 });

@@ -107,6 +107,30 @@ contract Pool {
     instalments[currentTerm].lowestBidder = msg.sender;
   }
 
+  function endCurrentTerm() public onlyMember requireStateStarted {
+    require(
+      block.timestamp > currentTermEndTimestamp,
+      "Current term period has not ended"
+    );
+    address lowestBidder = instalments[currentTerm].lowestBidder;
+    uint256 lowestBidAmount = instalments[currentTerm].lowestBidAmount;
+    IERC20(token).transfer(lowestBidder, lowestBidAmount);
+    uint256 singleShare = ((instalmentAmount * noOfMembersNoOfTerms) -
+      lowestBidAmount) / (noOfMembersNoOfTerms - 1);
+    for (uint256 index = 0; index < noOfMembersNoOfTerms; index++) {
+      if (members[index] != lowestBidder)
+        IERC20(token).transfer(members[index], singleShare);
+    }
+    if (currentTerm != noOfMembersNoOfTerms) {
+      currentTerm = currentTerm + 1;
+      currentTermEndTimestamp = currentTermEndTimestamp + termPeriod;
+    } else {
+      currentTerm = 0;
+      currentTermEndTimestamp = 0;
+      state = State.COMPLETE;
+    }
+  }
+
   function getBidsForInstalment(uint256 _term)
     public
     view
