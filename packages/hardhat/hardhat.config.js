@@ -10,6 +10,8 @@ require("hardhat-deploy");
 require("@eth-optimism/hardhat-ovm");
 require("@nomiclabs/hardhat-ethers");
 
+require("dotenv").config();
+
 const { isAddress, getAddress, formatUnits, parseUnits } = utils;
 
 /*
@@ -48,6 +50,12 @@ module.exports = {
   // (you will need to restart the `yarn run start` dev server after editing the .env)
 
   networks: {
+    hardhat: {
+      forking: {
+        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
+        blockNumber: 12760050,
+      },
+    },
     localhost: {
       url: "http://localhost:8545",
       /*
