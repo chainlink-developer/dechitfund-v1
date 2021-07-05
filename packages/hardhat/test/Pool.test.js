@@ -25,11 +25,12 @@ describe("DeChitFund v1", function () {
     COMPLETE: 2,
   };
 
+  const instalmentAmount = 200;
   const deployArgs = {
     noOfMembersNoOfTerms: 10,
     token: contracts.DAI_ADDRESS,
     termPeriod: monthInSeconds,
-    instalmentAmount: ethers.utils.parseEther("200"),
+    instalmentAmount: ethers.utils.parseEther(instalmentAmount.toString()),
     maxBidPercent: 90,
   };
 
