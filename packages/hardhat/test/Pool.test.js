@@ -129,5 +129,40 @@ describe("DeChitFund v1", function () {
         "Pool already has required no. of members"
       );
     });
+
+    it("Should allow members to deposit to Pool for current term", async function () {
+      const wallet1DaiBalanceBefore = parseInt(
+        ethers.utils.formatUnits(await daiContract.balanceOf(wallet1.address), daiDecimals),
+        10
+      );
+      const poolContractDaiBalanceBefore = parseInt(
+        ethers.utils.formatUnits(await daiContract.balanceOf(poolContract.address), daiDecimals),
+        10
+      );
+
+      await daiContract.connect(wallet1).approve(poolContract.address, deployArgs.instalmentAmount);
+
+      await poolContract.connect(wallet1).deposit();
+
+      const wallet1DaiBalanceAfter = parseInt(
+        ethers.utils.formatUnits(await daiContract.balanceOf(wallet1.address), daiDecimals),
+        10
+      );
+      const poolContractDaiBalanceAfter = parseInt(
+        ethers.utils.formatUnits(await daiContract.balanceOf(poolContract.address), daiDecimals),
+        10
+      );
+
+      expect(
+        await poolContract.getMemberPaidForInstalment(
+          await poolContract.currentTerm(),
+          wallet1.address
+        )
+      ).to.equal(true);
+      expect(wallet1DaiBalanceBefore - wallet1DaiBalanceAfter).to.be.equal(instalmentAmount);
+      expect(poolContractDaiBalanceAfter - poolContractDaiBalanceBefore).to.be.equal(
+        instalmentAmount
+      );
+    });
   });
 });
