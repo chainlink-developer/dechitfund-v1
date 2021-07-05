@@ -28,7 +28,7 @@ describe("DeChitFund v1", function () {
     maxBidPercent: 90,
   };
 
-  before(async () => {
+  before("get accounts", async () => {
     accounts = await ethers.getSigners();
     // deployer = accounts[0];
     wallet1 = accounts[1];
