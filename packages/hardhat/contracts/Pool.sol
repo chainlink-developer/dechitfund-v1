@@ -62,13 +62,7 @@ contract Pool {
     }
   }
 
-  function deposit() public {
-    require(isMember[msg.sender], "Caller is not a member of the Pool");
-    require(state == State.STARTED, "Pool State is not STARTED");
-    require(
-      block.timestamp < currentTermEndTimestamp,
-      "Current term period has already ended"
-    );
+  function deposit() public onlyMember requireStateStarted currentTermNotEnded {
     require(
       !instalments[currentTerm].memberPaid[msg.sender],
       "Member has already paid for current term"
@@ -83,5 +77,23 @@ contract Pool {
     returns (bool)
   {
     return instalments[_term].memberPaid[_memberAddress];
+  }
+
+  modifier onlyMember() {
+    require(isMember[msg.sender], "Caller is not a member of the Pool");
+    _;
+  }
+
+  modifier requireStateStarted() {
+    require(state == State.STARTED, "Pool State is not STARTED");
+    _;
+  }
+
+  modifier currentTermNotEnded() {
+    require(
+      block.timestamp < currentTermEndTimestamp,
+      "Current term period has already ended"
+    );
+    _;
   }
 }
