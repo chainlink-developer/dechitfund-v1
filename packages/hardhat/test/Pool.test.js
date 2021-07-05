@@ -1,6 +1,7 @@
 const { ethers } = require("hardhat");
 const { use, expect } = require("chai");
 const { solidity } = require("ethereum-waffle");
+const contracts = require("./utils/contracts");
 
 use(solidity);
 
@@ -11,7 +12,6 @@ describe("DeChitFund v1", function () {
 
   let poolContract;
 
-  const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
   const monthInSeconds = 30 * 24 * 60 * 60;
 
   const poolStates = {
@@ -22,7 +22,7 @@ describe("DeChitFund v1", function () {
 
   const deployArgs = {
     noOfMembersNoOfTerms: 10,
-    token: DAI,
+    token: contracts.DAI_ADDRESS,
     termPeriod: monthInSeconds,
     instalmentAmount: ethers.utils.parseEther("200"),
     maxBidPercent: 90,
