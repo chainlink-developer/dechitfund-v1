@@ -10,6 +10,12 @@
         "bracketSpacing": false,
         "explicitTypes": "always"
       }
+    },
+    {
+      "files": "*.test.js",
+      "options": {
+        "printWidth": 100
+      }
     }
   ]
 }
